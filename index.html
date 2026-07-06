@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lavetia Na Vanua Trust — Chiefly Coverage Areas | Fiji SIDS 2026 WIPO Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --bg:#161616;
+    --panel:#1d1d1d;
+    --panel-2:#232323;
+    --line:rgba(255,255,255,0.09);
+    --teal:#0aa19d;
+    --teal-soft:rgba(10,161,157,0.16);
+    --text:#e8e6e1;
+    --text-dim:#9a978f;
+    --text-faint:#6f6d66;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    padding:18px 28px 16px;
+    border-bottom:1px solid var(--line);
+    background:var(--bg);
+    flex:0 0 auto;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .brand-block h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;
+    font-size:clamp(20px,2.6vw,30px);
+    letter-spacing:0.01em;
+    line-height:1.15;
+  }
+  .brand-block h1 .rule{color:var(--teal);}
+  .brand-block .subtitle{
+    margin-top:5px;
+    font-size:12.5px;
+    color:var(--text-dim);
+    letter-spacing:0.02em;
+    max-width:820px;
+  }
+  .brand-tag{
+    font-size:10.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--teal);
+    white-space:nowrap;
+  }
+
+  /* ---------- Layout ---------- */
+  .app{flex:1 1 auto;display:flex;min-height:0;position:relative;}
+
+  /* ---------- Sidebar / Registry ---------- */
+  aside{
+    width:340px;
+    flex:0 0 340px;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    z-index:900;
+  }
+  .registry-head{padding:16px 20px 12px;border-bottom:1px solid var(--line);}
+  .registry-head .eyebrow{
+    font-size:10px;letter-spacing:0.24em;text-transform:uppercase;
+    color:var(--text-faint);margin-bottom:4px;
+  }
+  .registry-head h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;}
+  .view-switch{
+    display:flex;gap:0;margin:12px 0 2px;
+    border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  }
+  .view-switch button{
+    flex:1;background:transparent;border:none;color:var(--text-dim);
+    font-family:'DM Sans',sans-serif;font-size:11.5px;letter-spacing:0.04em;
+    padding:7px 8px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  .view-switch button.active{background:var(--teal-soft);color:var(--teal);font-weight:600;}
+  .view-switch button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+
+  .chief-list{
+    flex:1 1 auto;overflow-y:auto;padding:8px 0 12px;
+    scrollbar-width:thin;scrollbar-color:#333 transparent;
+  }
+  .chief-item{
+    width:100%;text-align:left;background:transparent;border:none;
+    border-left:3px solid transparent;
+    padding:12px 20px 12px 17px;cursor:pointer;
+    display:flex;gap:12px;align-items:flex-start;
+    transition:background .15s,border-color .15s,opacity .2s;
+    color:inherit;font-family:inherit;
+  }
+  .chief-item:hover{background:var(--panel-2);}
+  .chief-item:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+  .chief-item.hidden-layer{opacity:0.38;}
+  .swatch{
+    width:14px;height:14px;border-radius:3px;margin-top:3px;flex:0 0 14px;
+    border:1px solid rgba(255,255,255,0.25);
+  }
+  .chief-meta{min-width:0;}
+  .chief-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:16.5px;font-weight:600;line-height:1.25;display:block;
+  }
+  .chief-area{font-size:11.5px;color:var(--text-dim);margin-top:2px;line-height:1.4;display:block;}
+  .chief-toggle-hint{
+    margin-left:auto;align-self:center;
+    font-size:10px;color:var(--text-faint);
+    letter-spacing:0.08em;text-transform:uppercase;flex:0 0 auto;
+    padding:4px 2px;
+  }
+  .chief-toggle-hint:hover{color:var(--teal);}
+  .registry-note{
+    padding:12px 20px 10px;border-top:1px solid var(--line);
+    font-size:10.5px;line-height:1.55;color:var(--text-faint);
+  }
+  .data-status{
+    padding:0 20px 12px;
+    font-size:10px;letter-spacing:0.05em;color:var(--text-faint);
+  }
+  .data-status .chip{
+    display:inline-block;padding:3px 8px;border:1px solid var(--line);
+    border-radius:20px;color:var(--text-dim);
+  }
+  .data-status .chip.ok{border-color:rgba(10,161,157,0.5);color:var(--teal);}
+
+  /* ---------- Map ---------- */
+  .map-wrap{flex:1 1 auto;position:relative;min-width:0;}
+  #map{position:absolute;inset:0;background:#101010;}
+  .map-loading{
+    position:absolute;inset:0;z-index:800;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(22,22,22,0.55);
+    color:var(--text-dim);
+    font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+    pointer-events:none;
+    transition:opacity .4s;
+  }
+  .map-loading.done{opacity:0;}
+
+  /* Leaflet dark-theme adjustments */
+  .leaflet-container{font-family:'DM Sans',sans-serif;}
+  .leaflet-control-zoom a{
+    background:var(--panel) !important;color:var(--text) !important;
+    border:1px solid var(--line) !important;
+  }
+  .leaflet-control-zoom a:hover{background:var(--panel-2) !important;color:var(--teal) !important;}
+  .leaflet-control-attribution{
+    background:rgba(22,22,22,0.85) !important;color:var(--text-faint) !important;
+    font-size:9.5px !important;
+  }
+  .leaflet-control-attribution a{color:var(--text-dim) !important;}
+
+  .leaflet-popup-content-wrapper{
+    background:var(--panel);color:var(--text);
+    border:1px solid var(--line);border-radius:6px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.55);
+  }
+  .leaflet-popup-tip{background:var(--panel);border:1px solid var(--line);}
+  .leaflet-popup-content{margin:16px 18px;line-height:1.5;}
+  .popup-eyebrow{
+    font-size:9.5px;letter-spacing:0.22em;text-transform:uppercase;
+    margin-bottom:5px;font-weight:600;
+  }
+  .popup-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:20px;font-weight:600;line-height:1.2;color:var(--text);
+  }
+  .popup-gloss{font-size:11.5px;font-style:italic;color:var(--text-dim);margin-top:2px;}
+  .popup-divider{height:1px;background:var(--line);margin:10px 0;}
+  .popup-field{font-size:12px;color:var(--text);margin-bottom:6px;}
+  .popup-field .label{
+    display:block;font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--text-faint);margin-bottom:2px;
+  }
+  .popup-role{font-size:12px;color:var(--text-dim);line-height:1.55;}
+  .leaflet-container a.leaflet-popup-close-button{color:var(--text-dim) !important;}
+
+  /* Custom pin markers */
+  .chief-pin{position:relative;width:26px;height:26px;}
+  .chief-pin .dot{
+    position:absolute;left:50%;top:50%;
+    width:12px;height:12px;transform:translate(-50%,-50%);
+    border-radius:50%;border:2px solid #161616;
+    box-shadow:0 0 0 2px currentColor,0 2px 8px rgba(0,0,0,0.6);
+    background:currentColor;
+  }
+  .chief-pin .halo{
+    position:absolute;left:50%;top:50%;
+    width:26px;height:26px;transform:translate(-50%,-50%);
+    border-radius:50%;background:currentColor;opacity:0.18;
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .chief-pin .halo{animation:pulse 2.6s ease-in-out infinite;}
+    @keyframes pulse{
+      0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.18;}
+      50%{transform:translate(-50%,-50%) scale(1.35);opacity:0.07;}
+    }
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    flex:0 0 auto;padding:9px 28px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+    gap:16px;flex-wrap:wrap;
+    font-size:10.5px;color:var(--text-faint);letter-spacing:0.03em;
+  }
+  footer .credit strong{color:var(--text-dim);font-weight:500;}
+
+  /* ---------- Mobile ---------- */
+  .sidebar-toggle{
+    display:none;position:absolute;top:12px;left:12px;z-index:1000;
+    background:var(--panel);border:1px solid var(--line);color:var(--teal);
+    font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;
+    letter-spacing:0.06em;padding:8px 14px;border-radius:4px;cursor:pointer;
+    box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  }
+  @media (max-width:820px){
+    header{padding:14px 16px 12px;}
+    footer{padding:8px 16px;}
+    .app{flex-direction:column;}
+    aside{
+      position:absolute;inset:0;width:100%;flex:none;
+      transform:translateX(-102%);transition:transform .25s ease;border-right:none;
+    }
+    aside.open{transform:translateX(0);}
+    .sidebar-toggle{display:block;}
+    .brand-tag{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    aside{transition:none;}
+    .map-loading{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-block">
+    <h1>Lavetia Na Vanua Trust <span class="rule">—</span> Chiefly Coverage Areas, Fiji</h1>
+    <div class="subtitle">Customary (vanua) jurisdictions of the Trust's seven high chiefly titles across Viti Levu, the Yasawa Group and Vanua Levu — prepared for the Fiji SIDS 2026 WIPO Project. Boundaries shown are indicative representations of customary jurisdiction, not cadastral or legally definitive.</div>
+  </div>
+  <div class="brand-tag">WIPO &middot; Pacific SIDS 2026</div>
+</header>
+
+<div class="app">
+  <aside id="sidebar" aria-label="Chiefly title registry">
+    <div class="registry-head">
+      <div class="eyebrow">Registry of Titles</div>
+      <h2>High Chiefs — Lavetia Na Vanua Trust</h2>
+      <div class="view-switch" role="group" aria-label="Map view mode">
+        <button id="btn-regions" class="active" type="button">Regions + Pins</button>
+        <button id="btn-pins" type="button">Pins only</button>
+      </div>
+    </div>
+    <div class="chief-list" id="chiefList"></div>
+    <div class="registry-note">
+      Select a title to focus the map and open its record. Use Hide / Show to toggle a layer. Territories reflect customary jurisdiction as understood within the vanua structure; several titles hold overlapping authority within the same province.
+    </div>
+    <div class="data-status"><span class="chip" id="dataStatus">Loading province boundaries&hellip;</span></div>
+  </aside>
+
+  <div class="map-wrap">
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="sidebar">Registry</button>
+    <div id="map" role="application" aria-label="Map of chiefly jurisdictions in Fiji"></div>
+    <div class="map-loading" id="mapLoading">Loading boundaries&hellip;</div>
+  </div>
+</div>
+
+<footer>
+  <div class="credit">Prepared by <strong>Envirotech Solutions Pacific (ESP)</strong> for the Lavetia Na Vanua Trust.</div>
+  <div>Approximate customary jurisdictions &middot; Province geometry: geoBoundaries (CC BY 4.0) &middot; For presentation purposes only</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================
+     1. Chief registry
+     source: which accurate province geometry to use
+       'ba'        -> Ba Province (mainland + Mamanucas + northern Yasawas)
+       'kwalevu'   -> Nadroga-Navosa Province + southern Yasawa Group
+       'nadroga'   -> Nadroga-Navosa Province
+       'namosi'    -> Namosi Province
+       'naitasiri' -> Naitasiri Province
+       'bua'       -> Bua Province
+       'custom'    -> always use the embedded approximate polygon
+  ====================================================== */
+  var CHIEFS = [
+    {
+      id:"navitilevu",
+      title:"Tui Navitilevu",
+      gloss:"Paramount of Navitilevu",
+      area:"Tavua area, Ba Province",
+      role:"Presides over the vanua of the Tavua area, holding customary authority over its lands, waters and people within Ba Province.",
+      color:"#0aa19d",
+      seat:[-17.443,177.861], seatNote:"Tavua (approximate seat)",
+      source:"custom",
+      fallback:[[
+        [-17.36,177.76],[-17.36,177.92],[-17.44,177.98],[-17.56,177.94],
+        [-17.58,177.82],[-17.50,177.74],[-17.42,177.72]
+      ]]
+    },
+    {
+      id:"tui-ba",
+      title:"Momo Na Tui Ba",
+      gloss:"Paramount Chief of Ba",
+      area:"Whole of Ba Province, incl. northern Yasawa Group",
+      role:"Paramount title of Ba Province, one of Fiji's largest and most economically significant provinces, with customary reach over the northern Yasawa islands.",
+      color:"#c9a24b",
+      seat:[-17.533,177.667], seatNote:"Ba (approximate seat)",
+      source:"ba",
+      fallback:[[
+        [-17.75,177.36],[-17.65,177.40],[-17.56,177.46],[-17.48,177.56],
+        [-17.42,177.66],[-17.37,177.78],[-17.35,177.90],[-17.37,178.00],
+        [-17.48,178.03],[-17.60,178.01],[-17.72,177.94],[-17.82,177.84],
+        [-17.89,177.70],[-17.92,177.56],[-17.87,177.44],[-17.81,177.38]
+      ],[
+        [-16.62,177.48],[-16.68,177.60],[-16.85,177.58],[-17.00,177.48],
+        [-16.95,177.36],[-16.78,177.38]
+      ]]
+    },
+    {
+      id:"tui-bua",
+      title:"Turaga Na Tui Bua",
+      gloss:"Paramount Chief of Bua",
+      area:"Whole of Bua Province (Vanua Levu)",
+      role:"Paramount title of Bua, the western province of Vanua Levu, holding customary authority over its coastal and forested vanua.",
+      color:"#c98598",
+      seat:[-16.983,178.683], seatNote:"Nabouwalu (approximate seat)",
+      source:"bua",
+      fallback:[[
+        [-16.55,178.55],[-16.62,178.80],[-16.80,178.95],[-17.02,178.78],
+        [-17.06,178.62],[-16.92,178.48],[-16.72,178.44]
+      ]]
+    },
+    {
+      id:"tui-nadi",
+      title:"Momo Na Tui Nadi",
+      gloss:"Paramount Chief of Nadi",
+      area:"Whole of Nadi District",
+      role:"Paramount title of the Nadi District, customary authority over the vanua surrounding Fiji's principal international gateway.",
+      color:"#5b9bd5",
+      seat:[-17.775,177.436], seatNote:"Nadi (approximate seat)",
+      source:"custom",
+      fallback:[[
+        [-17.70,177.38],[-17.70,177.52],[-17.78,177.58],[-17.88,177.54],
+        [-17.90,177.44],[-17.84,177.38],[-17.76,177.36]
+      ]]
+    },
+    {
+      id:"kwalevu",
+      title:"Momo Na Kwalevu",
+      gloss:"Paramount Chief of Nadroga",
+      area:"Whole of Nadroga/Navosa Province + southern Yasawa Group",
+      role:"Paramount title of Nadroga/Navosa, holding customary authority across the province's coastal and interior vanua, extending to the southern islands of the Yasawa Group.",
+      color:"#9b6fae",
+      seat:[-18.145,177.505], seatNote:"Sigatoka / Cuvu area (approximate seat)",
+      source:"kwalevu",
+      fallback:[[
+        [-17.90,177.42],[-17.98,177.40],[-18.08,177.42],[-18.16,177.48],
+        [-18.22,177.58],[-18.26,177.70],[-18.24,177.84],[-18.18,177.94],
+        [-18.06,177.98],[-17.94,177.96],[-17.86,177.88],[-17.84,177.74],
+        [-17.86,177.60],[-17.88,177.50]
+      ],[
+        [-17.05,177.20],[-17.10,177.36],[-17.32,177.48],[-17.42,177.40],
+        [-17.34,177.24],[-17.15,177.12]
+      ]]
+    },
+    {
+      id:"tui-namosi",
+      title:"Turaga Na Vunivalu Na Tui Namosi",
+      gloss:"Warlord and Paramount of Namosi",
+      area:"Whole of Namosi Province",
+      role:"Paramount title of Namosi Province, the highland vanua lying between Nadroga/Navosa and Naitasiri, with Navua as its township.",
+      color:"#cf6f5a",
+      seat:[-18.224,178.170], seatNote:"Navua (township of Namosi Province)",
+      source:"namosi",
+      fallback:[[
+        [-17.92,178.02],[-18.02,177.98],[-18.14,178.02],[-18.24,178.12],
+        [-18.26,178.22],[-18.16,178.28],[-18.02,178.26],[-17.92,178.16],
+        [-17.88,178.08]
+      ]]
+    },
+    {
+      id:"roko-tui-colo",
+      title:"Turaga Na Roko Tui Colo",
+      gloss:"High Chief of the Interior (Colo)",
+      area:"Whole of Naitasiri Province",
+      role:"High chiefly title of the interior (Colo) vanua, with customary authority across the highland communities of Naitasiri Province.",
+      color:"#7cae7a",
+      seat:[-17.817,178.317], seatNote:"Vunidawa, Naitasiri (approximate seat)",
+      source:"naitasiri",
+      fallback:[[
+        [-17.62,178.20],[-17.68,178.42],[-17.85,178.52],[-18.02,178.48],
+        [-18.08,178.36],[-18.00,178.22],[-17.85,178.10],[-17.72,178.10]
+      ]]
+    }
+  ];
+
+  /* =====================================================
+     2. Map setup
+  ====================================================== */
+  var map = L.map("map",{
+    center:[-17.5,178.0],
+    zoom:8,
+    minZoom:7,
+    maxZoom:13,
+    zoomControl:true,
+    attributionControl:true
+  });
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> &middot; Province geometry: <a href="https://www.geoboundaries.org">geoBoundaries</a> (CC BY 4.0)',
+    subdomains:"abcd",
+    maxZoom:19
+  }).addTo(map);
+
+  function popupHtml(c){
+    return '<div class="popup-eyebrow" style="color:'+c.color+'">Chiefly Title</div>'+
+      '<div class="popup-title">'+c.title+'</div>'+
+      '<div class="popup-gloss">'+c.gloss+'</div>'+
+      '<div class="popup-divider"></div>'+
+      '<div class="popup-field"><span class="label">Customary Jurisdiction</span>'+c.area+'</div>'+
+      '<div class="popup-field"><span class="label">Seat</span>'+c.seatNote+'</div>'+
+      '<div class="popup-role">'+c.role+'</div>';
+  }
+
+  /* =====================================================
+     3. Accurate boundary loading (geoBoundaries FJI ADM2)
+        Falls back to embedded approximate polygons offline.
+  ====================================================== */
+  var GB_URLS = [
+    // Pinned commit (stable)
+    "https://media.githubusercontent.com/media/wmgeolab/geoBoundaries/9469f09592ced973a3448cf66b6100b741b64c0d/releaseData/gbOpen/FJI/ADM2/geoBoundaries-FJI-ADM2_simplified.geojson",
+    // Current main branch
+    "https://media.githubusercontent.com/media/wmgeolab/geoBoundaries/main/releaseData/gbOpen/FJI/ADM2/geoBoundaries-FJI-ADM2_simplified.geojson"
+  ];
+
+  function fetchJson(url){
+    return fetch(url,{mode:"cors"}).then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.json();
+    });
+  }
+
+  function loadProvinces(){
+    var chain = Promise.reject();
+    GB_URLS.forEach(function(u){
+      chain = chain.catch(function(){ return fetchJson(u); });
+    });
+    // Final fallback: geoBoundaries API redirect
+    chain = chain.catch(function(){
+      return fetchJson("https://www.geoboundaries.org/api/current/gbOpen/FJI/ADM2/")
+        .then(function(meta){
+          var u = meta.simplifiedGeometryGeoJSON || meta.gjDownloadURL;
+          if(!u) throw new Error("No download URL in API response");
+          return fetchJson(u);
+        });
+    });
+    return chain;
+  }
+
+  function norm(s){ return String(s||"").toLowerCase().replace(/[^a-z]/g,""); }
+
+  // GeoJSON geometry -> array of polygons, each polygon = array of rings, ring = [[lat,lng],...]
+  function geomToPolys(geom){
+    var polys = [];
+    if(!geom) return polys;
+    var coords = geom.type==="Polygon" ? [geom.coordinates]
+               : geom.type==="MultiPolygon" ? geom.coordinates : [];
+    coords.forEach(function(poly){
+      polys.push(poly.map(function(ring){
+        return ring.map(function(pt){ return [pt[1],pt[0]]; }); // [lng,lat] -> [lat,lng]
+      }));
+    });
+    return polys;
+  }
+
+  function centroidOf(poly){ // poly = [rings]; use outer ring
+    var ring = poly[0], la=0, lo=0;
+    ring.forEach(function(p){ la+=p[0]; lo+=p[1]; });
+    return [la/ring.length, lo/ring.length];
+  }
+
+  // Yasawa chain bounding box (excludes Viti Levu mainland and the Mamanucas)
+  function inYasawa(c){
+    return c[1]>=176.70 && c[1]<=177.68 && c[0]>=-17.46 && c[0]<=-16.50;
+  }
+
+  function buildAccurateGeoms(fc){
+    var byProv = {};
+    fc.features.forEach(function(f){
+      var n = norm(f.properties && (f.properties.shapeName || f.properties.shapeName_1 || f.properties.name));
+      if(n==="ba") byProv.ba = geomToPolys(f.geometry);
+      else if(n.indexOf("nadroga")!==-1) byProv.nadroga = geomToPolys(f.geometry);
+      else if(n==="naitasiri") byProv.naitasiri = geomToPolys(f.geometry);
+      else if(n==="bua") byProv.bua = geomToPolys(f.geometry);
+      else if(n==="namosi") byProv.namosi = geomToPolys(f.geometry);
+    });
+    if(!byProv.ba || !byProv.nadroga || !byProv.naitasiri || !byProv.bua || !byProv.namosi) return null;
+
+    // Split Ba's Yasawa islands: north stays with Tui Ba, south transfers to Na Kwalevu
+    var baKeep=[], yasawaSouth=[];
+    byProv.ba.forEach(function(poly){
+      var c = centroidOf(poly);
+      if(inYasawa(c) && c[0] < -17.02) yasawaSouth.push(poly);
+      else baKeep.push(poly);
+    });
+
+    return {
+      ba: baKeep,
+      kwalevu: byProv.nadroga.concat(yasawaSouth),
+      nadroga: byProv.nadroga,
+      naitasiri: byProv.naitasiri,
+      bua: byProv.bua,
+      namosi: byProv.namosi
+    };
+  }
+
+  /* =====================================================
+     4. Layer construction
+  ====================================================== */
+  var state = { pinsOnly:false, visible:{} };
+
+  function polygonsFor(c, geoms){
+    if(c.source!=="custom" && geoms && geoms[c.source]) return geoms[c.source];
+    // fallback: array of simple rings -> wrap each as single-ring polygon
+    return c.fallback.map(function(ring){ return [ring]; });
+  }
+
+  function buildLayers(geoms){
+    CHIEFS.forEach(function(c){
+      state.visible[c.id] = true;
+
+      c.regionLayer = L.polygon(polygonsFor(c,geoms),{
+        color:c.color, weight:1.6, opacity:0.9,
+        fillColor:c.color, fillOpacity:0.14, dashArray:"4 4"
+      }).bindPopup(popupHtml(c),{maxWidth:290});
+
+      c.regionLayer.on("mouseover",function(){ this.setStyle({fillOpacity:0.30,weight:2.4,dashArray:null}); });
+      c.regionLayer.on("mouseout",function(){ this.setStyle({fillOpacity:0.14,weight:1.6,dashArray:"4 4"}); });
+
+      var icon = L.divIcon({
+        className:"",
+        html:'<div class="chief-pin" style="color:'+c.color+'"><div class="halo"></div><div class="dot"></div></div>',
+        iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-10]
+      });
+      c.pinLayer = L.marker(c.seat,{icon:icon,title:c.title,keyboard:true})
+        .bindPopup(popupHtml(c),{maxWidth:290});
+
+      c.regionLayer.addTo(map);
+      c.pinLayer.addTo(map);
+    });
+
+    var b = null;
+    CHIEFS.forEach(function(c){
+      b = b ? b.extend(c.regionLayer.getBounds()) : L.latLngBounds(c.regionLayer.getBounds().getSouthWest(), c.regionLayer.getBounds().getNorthEast());
+    });
+    if(b) map.fitBounds(b,{padding:[36,36]});
+  }
+
+  function refreshLayers(){
+    CHIEFS.forEach(function(c){
+      var show = state.visible[c.id];
+      if(show && !state.pinsOnly){ if(!map.hasLayer(c.regionLayer)) map.addLayer(c.regionLayer); }
+      else { if(map.hasLayer(c.regionLayer)) map.removeLayer(c.regionLayer); }
+      if(show){ if(!map.hasLayer(c.pinLayer)) map.addLayer(c.pinLayer); }
+      else { if(map.hasLayer(c.pinLayer)) map.removeLayer(c.pinLayer); }
+    });
+  }
+
+  /* =====================================================
+     5. Sidebar registry
+  ====================================================== */
+  function buildRegistry(){
+    var list = document.getElementById("chiefList");
+    CHIEFS.forEach(function(c,i){
+      var item = document.createElement("button");
+      item.type = "button";
+      item.className = "chief-item";
+      item.setAttribute("aria-pressed","true");
+      item.innerHTML =
+        '<span class="swatch" style="background:'+c.color+'"></span>'+
+        '<span class="chief-meta"><span class="chief-title">'+(i+1)+'.&nbsp;'+c.title+'</span>'+
+        '<span class="chief-area">'+c.area+'</span></span>'+
+        '<span class="chief-toggle-hint" data-hint>Hide</span>';
+
+      item.addEventListener("click",function(e){
+        if(e.target.hasAttribute("data-hint")){
+          state.visible[c.id] = !state.visible[c.id];
+          item.classList.toggle("hidden-layer",!state.visible[c.id]);
+          item.setAttribute("aria-pressed",String(state.visible[c.id]));
+          e.target.textContent = state.visible[c.id] ? "Hide" : "Show";
+          refreshLayers();
+          return;
+        }
+        if(!state.visible[c.id]){
+          state.visible[c.id] = true;
+          item.classList.remove("hidden-layer");
+          item.setAttribute("aria-pressed","true");
+          item.querySelector("[data-hint]").textContent = "Hide";
+          refreshLayers();
+        }
+        map.flyToBounds(c.regionLayer.getBounds(),{padding:[50,50],maxZoom:11,duration:0.7});
+        setTimeout(function(){ c.pinLayer.openPopup(); },780);
+        if(window.innerWidth <= 820){ closeSidebar(); }
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  /* =====================================================
+     6. Controls
+  ====================================================== */
+  var btnRegions = document.getElementById("btn-regions");
+  var btnPins = document.getElementById("btn-pins");
+  btnRegions.addEventListener("click",function(){
+    state.pinsOnly = false;
+    btnRegions.classList.add("active"); btnPins.classList.remove("active");
+    refreshLayers();
+  });
+  btnPins.addEventListener("click",function(){
+    state.pinsOnly = true;
+    btnPins.classList.add("active"); btnRegions.classList.remove("active");
+    refreshLayers();
+  });
+
+  var sidebar = document.getElementById("sidebar");
+  var toggle = document.getElementById("sidebarToggle");
+  function closeSidebar(){
+    sidebar.classList.remove("open");
+    toggle.setAttribute("aria-expanded","false");
+    toggle.textContent = "Registry";
+  }
+  toggle.addEventListener("click",function(){
+    var open = sidebar.classList.toggle("open");
+    toggle.setAttribute("aria-expanded",String(open));
+    toggle.textContent = open ? "Close" : "Registry";
+  });
+
+  /* =====================================================
+     7. Boot
+  ====================================================== */
+  var statusChip = document.getElementById("dataStatus");
+  var loadingEl = document.getElementById("mapLoading");
+
+  function finish(geoms, accurate){
+    buildLayers(geoms);
+    buildRegistry();
+    loadingEl.classList.add("done");
+    setTimeout(function(){ loadingEl.style.display="none"; },500);
+    if(accurate){
+      statusChip.textContent = "Boundaries: geoBoundaries FJI ADM2 (accurate)";
+      statusChip.classList.add("ok");
+    } else {
+      statusChip.textContent = "Offline mode — approximate boundaries in use";
+    }
+  }
+
+  loadProvinces()
+    .then(function(fc){
+      var geoms = buildAccurateGeoms(fc);
+      if(geoms) finish(geoms, true);
+      else finish(null, false);
+    })
+    .catch(function(){ finish(null, false); });
+})();
+</script>
+</body>
+</html>
